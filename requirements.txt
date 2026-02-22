@@ -10,3 +10,5 @@ pydantic
 PyJWT
 reportlab
 PyPDF2
+easyocr
+
