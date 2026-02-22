@@ -1,0 +1,399 @@
+{% extends "base.html" %}
+
+{% block title %}Authentication - HealthAssist AI{% endblock %}
+
+{% block body %}
+<header class="landing-header">
+    <div class="header-container">
+        <div class="header-left">
+            <a href="{{ url_for('landing') }}" class="back-link-header">← Back to Home</a>
+        </div>
+        <div class="header-center">
+            <div class="logo">
+                <span class="logo-icon">🏥</span>
+                <span class="logo-text">HealthAssist AI</span>
+            </div>
+        </div>
+        <div class="header-right">
+            <button class="theme-toggle" onclick="toggleTheme()" title="Toggle Theme">
+                <span class="theme-icon">🌙</span>
+            </button>
+        </div>
+    </div>
+</header>
+
+<div class="auth-main-container">
+    <div class="auth-content-wrapper">
+
+        <!-- Left Side: Image Slider -->
+        <div class="auth-left">
+            <div class="auth-slider">
+                <div class="auth-slide-container">
+                    <div class="auth-slide active">
+                        <img src="https://images.unsplash.com/photo-1576091160550-2173dba999ef?w=700&h=700&fit=crop" alt="Healthcare">
+                        <div class="auth-slide-overlay">
+                            <h2>🏥 AI-Powered Healthcare</h2>
+                            <p>Accessible medical assistance for everyone</p>
+                        </div>
+                    </div>
+                    <div class="auth-slide">
+                        <img src="https://images.unsplash.com/photo-1631217868264-e5b90bb7e133?w=700&h=700&fit=crop" alt="Medical Tech">
+                        <div class="auth-slide-overlay">
+                            <h2>💊 Medicine Information</h2>
+                            <p>Comprehensive drug database at your fingertips</p>
+                        </div>
+                    </div>
+                    <div class="auth-slide">
+                        <img src="https://images.unsplash.com/photo-1584820927498-cfe5211fd8bf?w=700&h=700&fit=crop" alt="Diagnosis">
+                        <div class="auth-slide-overlay">
+                            <h2>🩺 Symptom Analysis</h2>
+                            <p>Get instant health insights with AI</p>
+                        </div>
+                    </div>
+                    <div class="auth-slide">
+                        <img src="https://images.unsplash.com/photo-1505751172876-fa1923c5c528?w=700&h=700&fit=crop" alt="Support">
+                        <div class="auth-slide-overlay">
+                            <h2>🌍 12+ Languages</h2>
+                            <p>Healthcare information in your language</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="auth-slider-dots">
+                    <span class="auth-dot active" onclick="setAuthSlide(0)"></span>
+                    <span class="auth-dot" onclick="setAuthSlide(1)"></span>
+                    <span class="auth-dot" onclick="setAuthSlide(2)"></span>
+                    <span class="auth-dot" onclick="setAuthSlide(3)"></span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Side: Auth Forms -->
+        <div class="auth-right">
+            <div class="auth-box-new">
+
+                <!-- Tab Navigation -->
+                <div class="auth-tabs">
+                    <button class="auth-tab-btn active" data-tab="login">
+                        <span class="tab-icon">🔐</span>
+                        <span>Sign In</span>
+                    </button>
+                    <button class="auth-tab-btn" data-tab="signup">
+                        <span class="tab-icon">✅</span>
+                        <span>Sign Up</span>
+                    </button>
+                    <button class="auth-tab-btn" data-tab="forgot">
+                        <span class="tab-icon">🔑</span>
+                        <span>Reset</span>
+                    </button>
+                </div>
+
+                <!-- Login Form -->
+                <div class="auth-tab-content active" id="login">
+                    <div class="form-header">
+                        <h2>Welcome Back!</h2>
+                        <p>Sign in to access your health assistant</p>
+                    </div>
+                    <form id="loginForm" class="modern-form">
+                        <div class="input-group">
+                            <label>📱 Mobile Number</label>
+                            <input type="tel" name="mobile" maxlength="10" placeholder="10-digit number" required>
+                        </div>
+                        <div class="input-group">
+                            <label>🔒 Password</label>
+                            <input type="password" name="password" placeholder="Enter your password" required>
+                        </div>
+                        <button type="submit" class="btn-submit">🚀 Sign In</button>
+                        <div class="form-footer-links">
+                            <span>New user? <a href="#" onclick="switchTab('signup')">Create account</a></span>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Signup Form -->
+                <div class="auth-tab-content" id="signup">
+                    <div class="form-header">
+                        <h2>Create Account</h2>
+                        <p>Join HealthAssist AI today</p>
+                    </div>
+                    <form id="signupForm" class="modern-form">
+                        <div class="input-group">
+                            <label>👤 Full Name</label>
+                            <input type="text" name="name" placeholder="Your full name" required>
+                        </div>
+                        <div class="input-group">
+                            <label>📱 Mobile Number</label>
+                            <input type="tel" name="mobile" maxlength="10" placeholder="10-digit number" required>
+                        </div>
+                        <div class="input-row">
+                            <div class="input-group">
+                                <label>🔒 Password</label>
+                                <input type="password" name="password" placeholder="Min 6 characters" required>
+                            </div>
+                            <div class="input-group">
+                                <label>🔒 Confirm</label>
+                                <input type="password" name="confirm_password" placeholder="Re-enter" required>
+                            </div>
+                        </div>
+                        <div class="input-group">
+                            <label>❓ Security Question</label>
+                            <select name="security_question" required>
+                                <option value="">Select a question</option>
+                                {% for question in security_questions %}
+                                <option value="{{ question }}">{{ question }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="input-group">
+                            <label>💬 Answer</label>
+                            <input type="text" name="security_answer" placeholder="Your answer" required>
+                        </div>
+                        <button type="submit" class="btn-submit">✅ Create Account</button>
+                        <div class="form-footer-links">
+                            <span>Have account? <a href="#" onclick="switchTab('login')">Sign in</a></span>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Forgot Password Form -->
+                <div class="auth-tab-content" id="forgot">
+                    <div id="forgotStep1" class="forgot-step-new active">
+                        <div class="form-header">
+                            <h2>Reset Password</h2>
+                            <p>Enter your registered mobile number</p>
+                        </div>
+                        <form id="forgotVerifyForm" class="modern-form">
+                            <div class="input-group">
+                                <label>📱 Mobile Number</label>
+                                <input type="tel" name="mobile" maxlength="10" placeholder="10-digit number" required>
+                            </div>
+                            <button type="submit" class="btn-submit">➡️ Continue</button>
+                            <div class="form-footer-links">
+                                <a href="#" onclick="switchTab('login')">← Back to Sign In</a>
+                            </div>
+                        </form>
+                    </div>
+
+                    <div id="forgotStep2" class="forgot-step-new">
+                        <div class="form-header">
+                            <h2>Security Question</h2>
+                            <p>Answer to verify your identity</p>
+                        </div>
+                        <form id="forgotAnswerForm" class="modern-form">
+                            <div class="security-question-display">
+                                <p id="securityQuestionDisplay"></p>
+                            </div>
+                            <div class="input-group">
+                                <label>💬 Your Answer</label>
+                                <input type="text" name="answer" placeholder="Enter your answer" required>
+                            </div>
+                            <button type="submit" class="btn-submit">✔️ Verify</button>
+                            <div class="form-footer-links">
+                                <a href="#" onclick="resetForgotPassword()">← Start Over</a>
+                            </div>
+                        </form>
+                    </div>
+
+                    <div id="forgotStep3" class="forgot-step-new">
+                        <div class="form-header">
+                            <h2>New Password</h2>
+                            <p>Create a strong password</p>
+                        </div>
+                        <form id="resetPasswordForm" class="modern-form">
+                            <div class="input-group">
+                                <label>🔒 New Password</label>
+                                <input type="password" name="new_password" placeholder="Min 6 characters" required>
+                            </div>
+                            <div class="input-group">
+                                <label>🔒 Confirm Password</label>
+                                <input type="password" name="confirm_password" placeholder="Re-enter password" required>
+                            </div>
+                            <button type="submit" class="btn-submit">🔐 Reset Password</button>
+                        </form>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="messageBox" class="toast-message"></div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function toggleTheme() {
+    const body = document.body;
+    const icon = document.querySelector('.theme-icon');
+    if (body.classList.contains('dark-mode')) {
+        body.classList.remove('dark-mode');
+        icon.textContent = '🌙';
+        localStorage.setItem('theme', 'light');
+    } else {
+        body.classList.add('dark-mode');
+        icon.textContent = '☀️';
+        localStorage.setItem('theme', 'dark');
+    }
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+    if (localStorage.getItem('theme') === 'dark') {
+        document.body.classList.add('dark-mode');
+        const icon = document.querySelector('.theme-icon');
+        if (icon) icon.textContent = '☀️';
+    }
+    // If URL has #signup, switch to signup tab
+    if (window.location.hash === '#signup') switchTab('signup');
+});
+
+// Image Slider
+let authCurrentSlide = 0;
+const authSlides = document.querySelectorAll('.auth-slide');
+const authDots = document.querySelectorAll('.auth-dot');
+
+function showAuthSlide(index) {
+    if (index >= authSlides.length) authCurrentSlide = 0;
+    if (index < 0) authCurrentSlide = authSlides.length - 1;
+    authSlides.forEach(s => s.classList.remove('active'));
+    authDots.forEach(d => d.classList.remove('active'));
+    authSlides[authCurrentSlide].classList.add('active');
+    authDots[authCurrentSlide].classList.add('active');
+}
+
+function setAuthSlide(index) { authCurrentSlide = index; showAuthSlide(authCurrentSlide); }
+setInterval(() => { authCurrentSlide++; showAuthSlide(authCurrentSlide); }, 5000);
+
+// Tab Switching
+let forgotMobile = '';
+
+document.querySelectorAll('.auth-tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => switchTab(btn.dataset.tab));
+});
+
+function switchTab(tabName) {
+    document.querySelectorAll('.auth-tab-btn').forEach(b => b.classList.remove('active'));
+    const tabBtn = document.querySelector(`[data-tab="${tabName}"]`);
+    if (tabBtn) tabBtn.classList.add('active');
+    document.querySelectorAll('.auth-tab-content').forEach(c => c.classList.remove('active'));
+    const tabContent = document.getElementById(tabName);
+    if (tabContent) tabContent.classList.add('active');
+    if (tabName !== 'forgot') resetForgotPassword();
+}
+
+// Login
+document.getElementById('loginForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+    showMessage('Signing in...', true);
+    try {
+        const response = await fetch('/auth/login', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ mobile: formData.get('mobile'), password: formData.get('password') })
+        });
+        const data = await response.json();
+        showMessage(data.message || (data.success ? 'Login successful!' : 'Login failed'), data.success);
+        if (data.success) setTimeout(() => window.location.href = data.redirect, 1000);
+    } catch (error) {
+        showMessage('Connection error', false);
+    }
+});
+
+// Signup
+document.getElementById('signupForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+    if (formData.get('password') !== formData.get('confirm_password')) {
+        showMessage('Passwords do not match', false); return;
+    }
+    try {
+        const response = await fetch('/auth/signup', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                name: formData.get('name'),
+                mobile: formData.get('mobile'),
+                password: formData.get('password'),
+                security_question: formData.get('security_question'),
+                security_answer: formData.get('security_answer')
+            })
+        });
+        const data = await response.json();
+        showMessage(data.message, data.success);
+        if (data.success) setTimeout(() => { switchTab('login'); e.target.reset(); }, 1500);
+    } catch (error) {
+        showMessage('Connection error', false);
+    }
+});
+
+// Forgot Step 1
+document.getElementById('forgotVerifyForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    forgotMobile = new FormData(e.target).get('mobile');
+    try {
+        const response = await fetch('/auth/forgot-password', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ step: 'verify_mobile', mobile: forgotMobile })
+        });
+        const data = await response.json();
+        if (data.success) {
+            document.getElementById('securityQuestionDisplay').textContent = data.security_question;
+            document.querySelectorAll('.forgot-step-new').forEach(s => s.classList.remove('active'));
+            document.getElementById('forgotStep2').classList.add('active');
+        } else { showMessage(data.message, false); }
+    } catch (error) { showMessage('Connection error', false); }
+});
+
+// Forgot Step 2
+document.getElementById('forgotAnswerForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const answer = new FormData(e.target).get('answer');
+    try {
+        const response = await fetch('/auth/forgot-password', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ step: 'verify_answer', mobile: forgotMobile, answer })
+        });
+        const data = await response.json();
+        if (data.success) {
+            document.querySelectorAll('.forgot-step-new').forEach(s => s.classList.remove('active'));
+            document.getElementById('forgotStep3').classList.add('active');
+        } else { showMessage(data.message, false); }
+    } catch (error) { showMessage('Connection error', false); }
+});
+
+// Forgot Step 3
+document.getElementById('resetPasswordForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+    if (formData.get('new_password') !== formData.get('confirm_password')) {
+        showMessage('Passwords do not match', false); return;
+    }
+    try {
+        const response = await fetch('/auth/forgot-password', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ step: 'reset_password', mobile: forgotMobile, new_password: formData.get('new_password') })
+        });
+        const data = await response.json();
+        showMessage(data.message, data.success);
+        if (data.success) setTimeout(() => { resetForgotPassword(); switchTab('login'); }, 1500);
+    } catch (error) { showMessage('Connection error', false); }
+});
+
+function resetForgotPassword() {
+    document.querySelectorAll('.forgot-step-new').forEach(s => s.classList.remove('active'));
+    document.getElementById('forgotStep1').classList.add('active');
+    document.querySelectorAll('.forgot-step-new form').forEach(f => f.reset());
+    forgotMobile = '';
+}
+
+function showMessage(message, success) {
+    const box = document.getElementById('messageBox');
+    box.textContent = message;
+    box.className = 'toast-message show ' + (success ? 'success' : 'error');
+    setTimeout(() => box.classList.remove('show'), 3000);
+}
+</script>
+{% endblock %}

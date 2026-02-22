@@ -1,0 +1,529 @@
+{% extends "base.html" %}
+
+{% block title %}Chat - HealthAssist AI{% endblock %}
+
+{% block body %}
+<header class="chat-header-new">
+    <div class="header-container-new">
+        <div class="header-left-new">
+            <span class="page-indicator">HealthAssist AI</span>
+        </div>
+        <div class="header-center-new">
+            <h1 class="chat-title-header">💬 Medical Assistant</h1>
+        </div>
+        <div class="header-right-new">
+            <button class="header-btn" onclick="window.location.href='{{ url_for('history.view_history') }}'">
+                📜 History
+            </button>
+            <button class="header-btn logout-header-btn" onclick="window.location.href='{{ url_for('auth.logout') }}'">
+                🚪 Logout
+            </button>
+        </div>
+    </div>
+</header>
+
+<div class="chat-main-container">
+    <div class="chat-area">
+
+        <!-- Task Selector -->
+        <div class="task-selector">
+            <select class="task-dropdown" id="taskDropdown" onchange="switchTask()">
+                <option value="general">💬 Ask Medical Questions</option>
+                <option value="medicine">💊 Medicine & Disease Info</option>
+                <option value="hospitals">🏥 Find Hospitals</option>
+                <option value="reports">📄 Analyze Reports</option>
+                <option value="symptoms">🩺 Check Symptoms</option>
+                <option value="emergency">🚨 Emergency Triage</option>
+            </select>
+            <button class="reset-btn" onclick="resetToGeneral()" title="Back to General Chat">↺ Reset</button>
+        </div>
+
+        <!-- Messages Container -->
+        <div class="messages-container" id="messagesContainer">
+            <div class="welcome-msg">
+                <div class="welcome-icon-new">🤖</div>
+                <h2>Hello, {{ user_name }}! I'm your AI Health Assistant</h2>
+                <p>Ask me anything about health, medicines, symptoms, or emergencies.</p>
+                <p class="welcome-hint">Select a task from the dropdown above or start chatting!</p>
+            </div>
+        </div>
+
+        <!-- Input Area -->
+        <div class="input-area-new">
+
+            <!-- General Chat Input -->
+            <div class="input-form-new active" id="input-general">
+                <div class="input-wrapper">
+                    <select class="lang-select-inline" id="lang-general">
+                        {% for lang in languages %}
+                        <option value="{{ lang }}">{{ lang }}</option>
+                        {% endfor %}
+                    </select>
+                    <textarea class="message-input" id="msg-general" placeholder="Ask your medical question..." rows="1"></textarea>
+                    <button class="send-btn" onclick="sendMessage('general')"><span class="send-icon">▶</span></button>
+                </div>
+            </div>
+
+            <!-- Medicine Input -->
+            <div class="input-form-new" id="input-medicine">
+                <div class="task-options">
+                    <label class="radio-option">
+                        <input type="radio" name="med-mode" value="Medicine Based" checked>
+                        <span>Medicine Info</span>
+                    </label>
+                    <label class="radio-option">
+                        <input type="radio" name="med-mode" value="Disease Based">
+                        <span>Disease Info</span>
+                    </label>
+                </div>
+                <div class="input-wrapper">
+                    <select class="lang-select-inline" id="lang-medicine">
+                        {% for lang in languages %}
+                        <option value="{{ lang }}">{{ lang }}</option>
+                        {% endfor %}
+                    </select>
+                    <input type="text" class="message-input" id="msg-medicine" placeholder="Enter medicine or disease name...">
+                    <button class="send-btn" onclick="sendMessage('medicine')"><span class="send-icon">▶</span></button>
+                </div>
+            </div>
+
+            <!-- Hospitals Input -->
+            <div class="input-form-new" id="input-hospitals">
+                <div class="input-wrapper-multi">
+                    <input type="text" class="message-input-half" id="hospital-district" placeholder="District (e.g., Guntur)">
+                    <input type="text" class="message-input-half" id="hospital-state" placeholder="State (optional)">
+                    <button class="send-btn" onclick="sendMessage('hospitals')"><span class="send-icon">🔍</span></button>
+                </div>
+            </div>
+
+            <!-- Reports Input -->
+            <div class="input-form-new" id="input-reports">
+                <div class="task-options">
+                    <label class="radio-option">
+                        <input type="radio" name="report-mode" value="PDF Report" checked>
+                        <span>PDF</span>
+                    </label>
+                    <label class="radio-option">
+                        <input type="radio" name="report-mode" value="Image Report">
+                        <span>Image</span>
+                    </label>
+                </div>
+                <div class="input-wrapper-multi">
+                    <select class="lang-select-inline-small" id="lang-reports">
+                        {% for lang in languages %}
+                        <option value="{{ lang }}">{{ lang }}</option>
+                        {% endfor %}
+                    </select>
+                    <input type="file" class="file-input-new" id="file-reports" accept=".pdf,.jpg,.jpeg,.png">
+                    <button class="send-btn" onclick="sendMessage('reports')"><span class="send-icon">📤</span></button>
+                </div>
+            </div>
+
+            <!-- Symptoms Input -->
+            <div class="input-form-new" id="input-symptoms">
+                <div class="symptoms-grid">
+                    <select class="input-small" id="lang-symptoms">
+                        {% for lang in languages %}
+                        <option value="{{ lang }}">{{ lang }}</option>
+                        {% endfor %}
+                    </select>
+                    <input type="number" class="input-small" id="age-symptoms" placeholder="Age" min="1" max="120" value="25">
+                    <select class="input-small" id="gender-symptoms">
+                        <option value="Male">Male</option>
+                        <option value="Female">Female</option>
+                        <option value="Other">Other</option>
+                    </select>
+                    <input type="text" class="input-small" id="duration-symptoms" placeholder="Duration (e.g. 2 days)">
+                    <select class="input-small" id="severity-symptoms">
+                        <option value="Mild">Mild</option>
+                        <option value="Moderate">Moderate</option>
+                        <option value="Severe">Severe</option>
+                    </select>
+                </div>
+                <div class="input-wrapper">
+                    <textarea class="message-input" id="msg-symptoms" placeholder="Describe your symptoms..." rows="2"></textarea>
+                    <button class="send-btn" onclick="sendMessage('symptoms')"><span class="send-icon">▶</span></button>
+                </div>
+            </div>
+
+            <!-- Emergency Input -->
+            <div class="input-form-new" id="input-emergency">
+                <div class="emergency-banner">
+                    ⚠️ For life-threatening emergencies, call 108 immediately!
+                </div>
+                <div class="emergency-grid">
+                    <select class="input-small" id="lang-emergency">
+                        {% for lang in languages %}
+                        <option value="{{ lang }}">{{ lang }}</option>
+                        {% endfor %}
+                    </select>
+                    <select class="input-small" id="level-emergency">
+                        <option value="Critical">🔴 Critical</option>
+                        <option value="Moderate">🟡 Moderate</option>
+                        <option value="Normal">🟢 Normal</option>
+                        <option value="Dead">⚫ Dead</option>
+                    </select>
+                    <input type="text" class="input-medium" id="vitals-emergency" placeholder="Vital signs (optional)">
+                </div>
+                <div class="input-wrapper">
+                    <textarea class="message-input" id="msg-emergency" placeholder="Describe the emergency..." rows="2"></textarea>
+                    <button class="send-btn" onclick="sendMessage('emergency')"><span class="send-icon">🚨</span></button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!-- Floating AI Assistant Widget -->
+<button class="chatbot-toggle" onclick="toggleChatbot()" title="AI Assistant">💬</button>
+
+<div id="chatbotWidget" class="chatbot-widget">
+    <div class="chatbot-widget-header">
+        <div class="chatbot-widget-title">
+            <span>🤖 AI Assistant</span>
+            <span class="widget-status-dot"></span>
+        </div>
+        <button onclick="closeChatbot()" class="widget-close-btn">×</button>
+    </div>
+    <div class="chatbot-widget-messages" id="widgetMessages">
+        <div class="widget-bot-msg">
+            <span class="widget-avatar">🤖</span>
+            <div class="widget-bubble">Hello! I'm your Medical AI assistant. How can I help you today?</div>
+        </div>
+    </div>
+    <div class="chatbot-widget-input">
+        <select class="widget-lang-select" id="widgetLanguage">
+            {% for lang in languages %}
+            <option value="{{ lang }}">{{ lang }}</option>
+            {% endfor %}
+        </select>
+        <div class="widget-input-row">
+            <input type="text" id="widgetChatInput" placeholder="Ask me anything..." onkeypress="handleWidgetKeypress(event)">
+            <button onclick="sendWidgetMessage()" class="widget-send-btn">Send</button>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let currentTask = 'general';
+
+// Task Switching
+function switchTask() {
+    const task = document.getElementById('taskDropdown').value;
+    currentTask = task;
+    document.querySelectorAll('.input-form-new').forEach(f => f.classList.remove('active'));
+    document.getElementById(`input-${task}`).classList.add('active');
+
+    const titles = {
+        'general': '💬 Medical Assistant',
+        'medicine': '💊 Medicine & Disease Info',
+        'hospitals': '🏥 Find Hospitals',
+        'reports': '📄 Report Analysis',
+        'symptoms': '🩺 Symptom Checker',
+        'emergency': '🚨 Emergency Triage'
+    };
+    document.querySelector('.chat-title-header').textContent = titles[task];
+}
+
+function resetToGeneral() {
+    document.getElementById('taskDropdown').value = 'general';
+    switchTask();
+    document.getElementById('messagesContainer').innerHTML = `
+        <div class="welcome-msg">
+            <div class="welcome-icon-new">🤖</div>
+            <h2>Hello! I'm your AI Health Assistant</h2>
+            <p>Ask me anything about health, medicines, symptoms, or emergencies.</p>
+            <p class="welcome-hint">Select a task from the dropdown above or start chatting!</p>
+        </div>
+    `;
+}
+
+// Send Message
+async function sendMessage(task) {
+    let userMessage = '';
+    let requestData = { category: task };
+
+    if (task === 'general') {
+        userMessage = document.getElementById('msg-general').value.trim();
+        if (!userMessage) { alert('Please enter a message'); return; }
+        requestData.message = userMessage;
+        requestData.language = document.getElementById('lang-general').value;
+        document.getElementById('msg-general').value = '';
+
+    } else if (task === 'medicine') {
+        userMessage = document.getElementById('msg-medicine').value.trim();
+        if (!userMessage) { alert('Please enter medicine/disease name'); return; }
+        const mode = document.querySelector('input[name="med-mode"]:checked').value;
+        requestData.search_term = userMessage;
+        requestData.mode = mode;
+        requestData.language = document.getElementById('lang-medicine').value;
+        userMessage = `Search ${mode}: ${userMessage}`;
+        document.getElementById('msg-medicine').value = '';
+
+    } else if (task === 'hospitals') {
+        const district = document.getElementById('hospital-district').value.trim();
+        const state = document.getElementById('hospital-state').value.trim();
+        if (!district) { alert('Please enter district'); return; }
+        userMessage = `Find hospitals in ${district}${state ? ', ' + state : ''}`;
+        addUserMessage(userMessage);
+        showThinking();
+        try {
+            const response = await fetch('/chat/find-hospitals', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ district, state })
+            });
+            const data = await response.json();
+            hideThinking();
+            if (data.success && data.hospitals.length > 0) {
+                let html = `<div class="hospitals-result"><h3>🏥 Found ${data.hospitals.length} Hospitals</h3>`;
+                data.hospitals.forEach(h => {
+                    html += `<div class="hospital-card-new">
+                        <h4>${h.name}</h4>
+                        <p><strong>📍 Address:</strong> ${h.address}</p>
+                        <p><strong>🏙️ District:</strong> ${h.district} | <strong>📍 State:</strong> ${h.state}</p>
+                        <p><strong>📮 Postal:</strong> ${h.postal_code}</p>
+                        <a href="${h.google_maps}" target="_blank" class="directions-btn">🗺️ Get Directions</a>
+                    </div>`;
+                });
+                html += '</div>';
+                addBotMessage(html, true);
+            } else {
+                addBotMessage('No hospitals found. Please try a different location.');
+            }
+        } catch (error) {
+            hideThinking();
+            addBotMessage('Error finding hospitals. Please try again.');
+        }
+        return;
+
+    } else if (task === 'reports') {
+        const fileInput = document.getElementById('file-reports');
+        if (!fileInput.files[0]) { alert('Please select a file'); return; }
+        const fileType = document.querySelector('input[name="report-mode"]:checked').value;
+        userMessage = `Analyze ${fileType}: ${fileInput.files[0].name}`;
+        addUserMessage(userMessage);
+        showThinking();
+        const formData = new FormData();
+        formData.append('file', fileInput.files[0]);
+        formData.append('file_type', fileType);
+        formData.append('language', document.getElementById('lang-reports').value);
+        try {
+            const response = await fetch('/chat/upload-file', { method: 'POST', body: formData });
+            const data = await response.json();
+            hideThinking();
+            addBotMessage(data.success ? data.response : 'Error analyzing file.', true);
+        } catch (error) {
+            hideThinking();
+            addBotMessage('Error uploading file. Please try again.');
+        }
+        fileInput.value = '';
+        return;
+
+    } else if (task === 'symptoms') {
+        const symptoms = document.getElementById('msg-symptoms').value.trim();
+        const duration = document.getElementById('duration-symptoms').value.trim();
+        if (!symptoms || !duration) { alert('Please enter symptoms and duration'); return; }
+        const age = document.getElementById('age-symptoms').value;
+        const gender = document.getElementById('gender-symptoms').value;
+        const severity = document.getElementById('severity-symptoms').value;
+        requestData.symptoms = symptoms;
+        requestData.age = age;
+        requestData.gender = gender;
+        requestData.duration = duration;
+        requestData.severity = severity;
+        requestData.language = document.getElementById('lang-symptoms').value;
+        userMessage = `Symptoms: ${symptoms} | Age: ${age} | ${gender} | Duration: ${duration} | Severity: ${severity}`;
+        document.getElementById('msg-symptoms').value = '';
+
+    } else if (task === 'emergency') {
+        const emergency = document.getElementById('msg-emergency').value.trim();
+        if (!emergency) { alert('Please describe the emergency'); return; }
+        const level = document.getElementById('level-emergency').value;
+        const vitals = document.getElementById('vitals-emergency').value.trim();
+        requestData.emergency_desc = emergency;
+        requestData.level = level;
+        requestData.vital_signs = vitals;
+        requestData.language = document.getElementById('lang-emergency').value;
+        userMessage = `🚨 EMERGENCY (${level}): ${emergency}`;
+        document.getElementById('msg-emergency').value = '';
+    }
+
+    addUserMessage(userMessage);
+    showThinking();
+
+    try {
+        const response = await fetch('/chat/send-message', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(requestData)
+        });
+        const data = await response.json();
+        hideThinking();
+        addBotMessage(data.success ? data.response : 'Sorry, I encountered an error. Please try again.', true);
+    } catch (error) {
+        hideThinking();
+        addBotMessage('Connection error. Please check your internet and try again.');
+    }
+}
+
+// Message Functions
+function addUserMessage(text) {
+    const container = document.getElementById('messagesContainer');
+    const welcome = container.querySelector('.welcome-msg');
+    if (welcome) welcome.remove();
+
+    const msgDiv = document.createElement('div');
+    msgDiv.className = 'message-row user-row';
+    msgDiv.innerHTML = `
+        <div class="message-bubble-new user-bubble"><div class="message-text">${escapeHtml(text)}</div></div>
+        <div class="message-avatar-new user-avatar">👤</div>
+    `;
+    container.appendChild(msgDiv);
+    scrollToBottom();
+}
+
+function addBotMessage(content, isHTML = false) {
+    const container = document.getElementById('messagesContainer');
+    const msgDiv = document.createElement('div');
+    msgDiv.className = 'message-row bot-row';
+    msgDiv.innerHTML = `
+        <div class="message-avatar-new bot-avatar">🤖</div>
+        <div class="message-bubble-new bot-bubble"><div class="message-text">${isHTML ? cleanHTML(content) : escapeHtml(content)}</div></div>
+    `;
+    container.appendChild(msgDiv);
+    scrollToBottom();
+}
+
+function showThinking() {
+    const container = document.getElementById('messagesContainer');
+    const div = document.createElement('div');
+    div.className = 'message-row bot-row thinking-row';
+    div.id = 'thinking-indicator';
+    div.innerHTML = `
+        <div class="message-avatar-new bot-avatar">🤖</div>
+        <div class="thinking-bubble">
+            <div class="thinking-dots"><span></span><span></span><span></span></div>
+            <span class="thinking-text">Thinking...</span>
+        </div>
+    `;
+    container.appendChild(div);
+    scrollToBottom();
+}
+
+function hideThinking() {
+    const el = document.getElementById('thinking-indicator');
+    if (el) el.remove();
+}
+
+function scrollToBottom() {
+    const container = document.getElementById('messagesContainer');
+    setTimeout(() => container.scrollTo({ top: container.scrollHeight, behavior: 'smooth' }), 100);
+}
+
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+function cleanHTML(html) {
+    let clean = html;
+    clean = clean.replace(/<!DOCTYPE[^>]*>/gi, '');
+    clean = clean.replace(/<\/?html[^>]*>/gi, '');
+    clean = clean.replace(/<\/?head[^>]*>/gi, '');
+    clean = clean.replace(/<\/?body[^>]*>/gi, '');
+    clean = clean.replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '');
+    clean = clean.replace(/<img /g, '<img style="max-width:100%;height:auto;border-radius:8px;margin:10px 0;" ');
+    return clean;
+}
+
+// Auto-resize textarea
+document.addEventListener('input', (e) => {
+    if (e.target.tagName === 'TEXTAREA') {
+        e.target.style.height = 'auto';
+        e.target.style.height = e.target.scrollHeight + 'px';
+    }
+});
+
+// Enter to send
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && !e.shiftKey && e.target.classList.contains('message-input')) {
+        e.preventDefault();
+        const form = e.target.closest('.input-form-new');
+        if (form) {
+            const taskId = form.id.replace('input-', '');
+            sendMessage(taskId);
+        }
+    }
+});
+
+// ==================== FLOATING CHATBOT WIDGET ====================
+function toggleChatbot() {
+    const widget = document.getElementById('chatbotWidget');
+    widget.classList.toggle('open');
+}
+
+function closeChatbot() {
+    document.getElementById('chatbotWidget').classList.remove('open');
+}
+
+function handleWidgetKeypress(e) {
+    if (e.key === 'Enter') sendWidgetMessage();
+}
+
+async function sendWidgetMessage() {
+    const input = document.getElementById('widgetChatInput');
+    const message = input.value.trim();
+    const language = document.getElementById('widgetLanguage').value;
+    if (!message) return;
+
+    addWidgetMessage('user', message);
+    input.value = '';
+
+    addWidgetMessage('bot', '...', false, 'widget-typing');
+
+    try {
+        const response = await fetch('/chat/send-message', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ category: 'general', message, language })
+        });
+        const data = await response.json();
+
+        const typing = document.querySelector('.widget-typing');
+        if (typing) typing.remove();
+
+        if (data.success) {
+            // Strip HTML for widget - keep it clean
+            const div = document.createElement('div');
+            div.innerHTML = data.response;
+            const plainText = div.textContent || div.innerText || data.response;
+            addWidgetMessage('bot', plainText.substring(0, 500) + (plainText.length > 500 ? '...' : ''));
+        } else {
+            addWidgetMessage('bot', 'Sorry, I encountered an error. Please try again.');
+        }
+    } catch (error) {
+        const typing = document.querySelector('.widget-typing');
+        if (typing) typing.remove();
+        addWidgetMessage('bot', 'Connection error. Please try again.');
+    }
+}
+
+function addWidgetMessage(role, text, isHTML = false, extraClass = '') {
+    const container = document.getElementById('widgetMessages');
+    const div = document.createElement('div');
+    div.className = (role === 'user' ? 'widget-user-msg' : 'widget-bot-msg') + (extraClass ? ' ' + extraClass : '');
+    div.innerHTML = `
+        <span class="widget-avatar">${role === 'user' ? '👤' : '🤖'}</span>
+        <div class="widget-bubble">${isHTML ? text : escapeHtml(text)}</div>
+    `;
+    container.appendChild(div);
+    container.scrollTop = container.scrollHeight;
+}
+</script>
+{% endblock %}

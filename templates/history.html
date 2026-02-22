@@ -1,0 +1,338 @@
+{% extends "base.html" %}
+
+{% block title %}History - HealthAssist AI{% endblock %}
+
+{% block body %}
+<header class="chat-header-new">
+    <div class="header-container-new">
+        <div class="header-left-new">
+            <span class="page-indicator">HealthAssist AI</span>
+        </div>
+        <div class="header-center-new">
+            <h1 class="chat-title-header">📜 Consultation History</h1>
+        </div>
+        <div class="header-right-new">
+            <button class="header-btn" onclick="window.location.href='{{ url_for('chat.chatbot') }}'">← Back to Chat</button>
+            <button class="header-btn logout-header-btn" onclick="clearAllHistory()">🗑️ Clear All</button>
+        </div>
+    </div>
+</header>
+
+<div class="history-main-container">
+
+    <!-- Filter Section -->
+    <div class="history-filter-section">
+        <div class="filter-label">
+            <span class="filter-icon">🔍</span>
+            <span>Filter by Category:</span>
+        </div>
+        <select class="history-filter-dropdown" id="categoryFilter" onchange="filterHistory()">
+            <option value="all">📋 All Categories</option>
+            <option value="chat">💬 General Chat</option>
+            <option value="medicine">💊 Medicine Info</option>
+            <option value="report">📄 Report Analysis</option>
+            <option value="symptom">🩺 Symptom Check</option>
+            <option value="emergency">🚨 Emergency</option>
+        </select>
+        <div class="history-count">
+            <span id="itemCount">{{ history|length if history else 0 }}</span> items
+        </div>
+    </div>
+
+    <!-- History Content -->
+    <div class="history-content-new">
+        {% if history %}
+            {% for item in history %}
+            <div class="history-card" data-category="{{ item.category }}">
+
+                <!-- Card Header -->
+                <div class="history-card-header">
+                    <div class="history-card-left">
+                        <span class="history-badge history-badge-{{ item.category }}">
+                            {% if item.category == 'chat' %}💬 General Chat
+                            {% elif item.category == 'medicine' %}💊 Medicine Info
+                            {% elif item.category == 'report' %}📄 Report Analysis
+                            {% elif item.category == 'symptom' %}🩺 Symptom Check
+                            {% elif item.category == 'emergency' %}🚨 Emergency
+                            {% endif %}
+                        </span>
+                        <span class="history-time">🕒 {{ item.timestamp[:19].replace('T', ' ') if item.timestamp else 'N/A' }}</span>
+                    </div>
+                    <div class="history-card-actions">
+                        <button class="email-btn" onclick="openEmailModal({{ item.id }})" title="Send as Email PDF">
+                            📧 Email PDF
+                        </button>
+                        <button class="delete-btn" onclick="deleteHistoryItem({{ item.id }})" title="Delete">
+                            <span class="delete-icon">🗑️</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Card Body -->
+                <div class="history-card-body">
+
+                    {% if item.category == 'chat' %}
+                        <div class="history-section">
+                            <div class="section-label">Question:</div>
+                            <div class="section-content user-content">{{ item.data.question }}</div>
+                        </div>
+                        <div class="history-section">
+                            <div class="section-label">AI Response:</div>
+                            <div class="section-content bot-content">
+                                <div class="html-response">{{ item.data.response|safe }}</div>
+                            </div>
+                        </div>
+
+                    {% elif item.category == 'medicine' %}
+                        <div class="history-section">
+                            <div class="section-label">Search Details:</div>
+                            <div class="section-content info-content">
+                                <strong>Type:</strong> {{ item.data.search_type }}<br>
+                                <strong>Search:</strong> {{ item.data.search_term }}
+                            </div>
+                        </div>
+                        <div class="history-section">
+                            <div class="section-label">Information:</div>
+                            <div class="section-content bot-content">
+                                <div class="html-response">{{ item.data.response|safe }}</div>
+                            </div>
+                        </div>
+
+                    {% elif item.category == 'report' %}
+                        <div class="history-section">
+                            <div class="section-label">File Details:</div>
+                            <div class="section-content info-content">
+                                <strong>📎 File:</strong> {{ item.data.filename }}<br>
+                                <strong>📋 Type:</strong> {{ item.data.type }}
+                            </div>
+                        </div>
+                        <div class="history-section">
+                            <div class="section-label">Analysis:</div>
+                            <div class="section-content bot-content">
+                                <div class="html-response">{{ item.data.response|safe }}</div>
+                            </div>
+                        </div>
+
+                    {% elif item.category == 'symptom' %}
+                        <div class="history-section">
+                            <div class="section-label">Patient Information:</div>
+                            <div class="section-content info-content">
+                                <strong>Symptoms:</strong> {{ item.data.symptoms }}<br>
+                                <strong>Age:</strong> {{ item.data.age }} |
+                                <strong>Gender:</strong> {{ item.data.gender }} |
+                                <strong>Duration:</strong> {{ item.data.duration }} |
+                                <strong>Severity:</strong> {{ item.data.severity }}
+                            </div>
+                        </div>
+                        <div class="history-section">
+                            <div class="section-label">Assessment:</div>
+                            <div class="section-content bot-content">
+                                <div class="html-response">{{ item.data.response|safe }}</div>
+                            </div>
+                        </div>
+
+                    {% elif item.category == 'emergency' %}
+                        <div class="history-section emergency-section">
+                            <div class="section-label">🚨 Emergency Details:</div>
+                            <div class="section-content emergency-content">
+                                <strong>Description:</strong> {{ item.data.emergency_desc }}<br>
+                                <strong>Triage Level:</strong>
+                                <span class="triage-badge triage-{{ item.data.level|lower }}">{{ item.data.level }}</span>
+                            </div>
+                        </div>
+                        <div class="history-section">
+                            <div class="section-label">Emergency Response:</div>
+                            <div class="section-content bot-content">
+                                <div class="html-response">{{ item.data.response|safe }}</div>
+                            </div>
+                        </div>
+                    {% endif %}
+
+                    {% if item.data.language %}
+                    <div class="history-footer">
+                        <span class="language-tag">🌐 {{ item.data.language }}</span>
+                    </div>
+                    {% endif %}
+
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="empty-history-new">
+                <div class="empty-icon-new">📭</div>
+                <h2>No History Yet</h2>
+                <p>Your consultation history will appear here</p>
+                <button class="start-chat-btn" onclick="window.location.href='{{ url_for('chat.chatbot') }}'">
+                    💬 Start Chatting
+                </button>
+            </div>
+        {% endif %}
+    </div>
+
+</div>
+
+<!-- Email Modal -->
+<div id="emailModal" class="modal-overlay" onclick="closeEmailModalOutside(event)">
+    <div class="modal-box">
+        <div class="modal-header">
+            <h3>📧 Send Consultation as PDF</h3>
+            <button class="modal-close-btn" onclick="closeEmailModal()">×</button>
+        </div>
+        <div class="modal-body">
+            <p class="modal-info">This consultation will be converted to a PDF and sent to the email address below.</p>
+            <div class="modal-form">
+                <div class="modal-input-group">
+                    <label>📧 Email Address <span class="required">*</span></label>
+                    <input type="email" id="emailTo" placeholder="recipient@example.com" required>
+                </div>
+                <div class="modal-input-group">
+                    <label>📝 Subject</label>
+                    <input type="text" id="emailSubject" placeholder="HealthAssist AI - Consultation Report">
+                </div>
+                <div class="modal-input-group">
+                    <label>💬 Message Body</label>
+                    <textarea id="emailBody" rows="4" placeholder="Add a personal message (optional)..."></textarea>
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="modal-cancel-btn" onclick="closeEmailModal()">Cancel</button>
+            <button class="modal-send-btn" onclick="sendEmailFromModal()">📤 Send PDF</button>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let currentEmailHistoryId = null;
+
+function filterHistory() {
+    const filter = document.getElementById('categoryFilter').value;
+    const items = document.querySelectorAll('.history-card');
+    let visibleCount = 0;
+    items.forEach(item => {
+        if (filter === 'all' || item.dataset.category === filter) {
+            item.style.display = 'block';
+            visibleCount++;
+        } else {
+            item.style.display = 'none';
+        }
+    });
+    document.getElementById('itemCount').textContent = visibleCount;
+}
+
+async function deleteHistoryItem(id) {
+    if (!confirm('🗑️ Delete this history item?\n\nThis action cannot be undone.')) return;
+    try {
+        const response = await fetch(`/history/delete/${id}`, { method: 'POST' });
+        const data = await response.json();
+        if (data.success) {
+            showToast('✅ History item deleted', 'success');
+            setTimeout(() => location.reload(), 800);
+        } else {
+            showToast('❌ Failed to delete item', 'error');
+        }
+    } catch (error) {
+        showToast('❌ Connection error', 'error');
+    }
+}
+
+async function clearAllHistory() {
+    if (!confirm('⚠️ Clear ALL history?\n\nThis will permanently delete all your consultation history.\n\nThis action cannot be undone!')) return;
+    try {
+        const response = await fetch('/history/clear', { method: 'POST' });
+        const data = await response.json();
+        if (data.success) {
+            showToast('✅ All history cleared', 'success');
+            setTimeout(() => location.reload(), 800);
+        } else {
+            showToast('❌ Failed to clear history', 'error');
+        }
+    } catch (error) {
+        showToast('❌ Connection error', 'error');
+    }
+}
+
+// ==================== EMAIL MODAL ====================
+function openEmailModal(historyId) {
+    currentEmailHistoryId = historyId;
+    document.getElementById('emailTo').value = '';
+    document.getElementById('emailSubject').value = 'HealthAssist AI - Consultation Report';
+    document.getElementById('emailBody').value = '';
+    document.getElementById('emailModal').classList.add('open');
+}
+
+function closeEmailModal() {
+    document.getElementById('emailModal').classList.remove('open');
+    currentEmailHistoryId = null;
+}
+
+function closeEmailModalOutside(event) {
+    if (event.target === document.getElementById('emailModal')) {
+        closeEmailModal();
+    }
+}
+
+async function sendEmailFromModal() {
+    const email = document.getElementById('emailTo').value.trim();
+    const subject = document.getElementById('emailSubject').value.trim();
+    const body = document.getElementById('emailBody').value.trim();
+
+    if (!email) {
+        showToast('❌ Please enter an email address', 'error');
+        document.getElementById('emailTo').focus();
+        return;
+    }
+
+    if (!email.includes('@') || !email.includes('.')) {
+        showToast('❌ Please enter a valid email address', 'error');
+        document.getElementById('emailTo').focus();
+        return;
+    }
+
+    if (!currentEmailHistoryId) {
+        showToast('❌ No history item selected', 'error');
+        return;
+    }
+
+    const sendBtn = document.querySelector('.modal-send-btn');
+    sendBtn.disabled = true;
+    sendBtn.textContent = '⏳ Sending...';
+
+    try {
+        const response = await fetch(`/history/send-item-email/${currentEmailHistoryId}`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ email, subject, body })
+        });
+        const data = await response.json();
+
+        if (data.success) {
+            showToast('✅ ' + data.message, 'success');
+            closeEmailModal();
+        } else {
+            showToast('❌ ' + data.message, 'error');
+        }
+    } catch (error) {
+        showToast('❌ Connection error. Please try again.', 'error');
+    } finally {
+        sendBtn.disabled = false;
+        sendBtn.textContent = '📤 Send PDF';
+    }
+}
+
+function showToast(message, type) {
+    const toast = document.createElement('div');
+    toast.className = `toast-notification toast-${type}`;
+    toast.textContent = message;
+    document.body.appendChild(toast);
+    setTimeout(() => toast.classList.add('show'), 100);
+    setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => { if (toast.parentNode) document.body.removeChild(toast); }, 300);
+    }, 3500);
+}
+</script>
+{% endblock %}
