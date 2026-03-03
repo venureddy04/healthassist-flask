@@ -8,7 +8,6 @@ def call_mistral_ai(prompt, temperature=0.7):
     try:
         html_prompt = f"""
 You are an HTML content generator for a medical health assistant.
-
 TASK:
 - Convert the user's request into a complete, valid HTML document.
 - Output ONLY HTML.
